@@ -1,0 +1,23 @@
+{
+    "name": "appkit/redis",
+    "type": "library",
+    "description": "Redis client for the AppKit framework",
+    "license": "MIT",
+    "require": {
+        "appkit/async": "^1.0",
+        "appkit/health": "^1.0",
+        "appkit/start-stop": "^1.0",
+        "clue/redis-react": "^2.8",
+        "react/async": "^4.3",
+        "react/promise": "^3.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "AppKit\\Redis\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
