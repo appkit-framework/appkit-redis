@@ -7,13 +7,13 @@ use AppKit\Health\HealthIndicatorInterface;
 use AppKit\Health\HealthCheckResult;
 use AppKit\Async\Task;
 use AppKit\Async\CanceledException;
+use function AppKit\Async\async;
+use function AppKit\Async\await;
 use function AppKit\Async\delay;
 
 use Throwable;
 use Clue\React\Redis\Factory;
 use React\Promise\Deferred;
-use function React\Async\async;
-use function React\Async\await;
 
 class RedisClient implements StartStopInterface, HealthIndicatorInterface {
     private $log;
