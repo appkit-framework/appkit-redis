@@ -32,7 +32,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
         $password = null,
         $database = null
     ) {
-        $this -> log = $log -> withModule($this);
+        $this -> log = $log -> withModule(static::class);
 
         $this -> uri = "redis://$host:$port";
         if($database)
