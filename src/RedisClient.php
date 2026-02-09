@@ -38,7 +38,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
         if($database)
             $this -> uri .= "/$database";
         if($password)
-            $this -> uri .= '?password=' . rawurlencode($password); // TODO check for urlencode / rawurlencode
+            $this -> uri .= '?password=' . rawurlencode($password);
 
         $this -> factory = new Factory();
     }
@@ -104,7 +104,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
     }
 
     private function connectRoutine() {
-        $connectDelay = null;
+        $retryAfter = null;
 
         while(true) {
             try {
@@ -119,18 +119,19 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
 
                 break;
             } catch(Throwable $e) {
-                if(! $connectDelay)
-                    $connectDelay = 1;
-                else if($connectDelay == 1)
-                    $connectDelay = 5;
-                else if($connectDelay == 5)
-                    $connectDelay = 10;
+                if(! $retryAfter)
+                    $retryAfter = 1;
+                else if($retryAfter == 1)
+                    $retryAfter = 5;
+                else if($retryAfter == 5)
+                    $retryAfter = 10;
 
                 $this -> log -> error(
-                    "Failed to connect to Redis server, retrying in $connectDelay seconds",
+                    'Failed to connect to Redis server',
+                    [ 'retryAfter' => $retryAfter ],
                     $e
                 );
-                delay($connectDelay);
+                delay($retryAfter);
             }
         }
 
