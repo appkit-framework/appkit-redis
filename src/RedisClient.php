@@ -65,7 +65,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
         $this -> isStopping = true;
 
         if($this -> connectTask -> getStatus() == Task::RUNNING) {
-            $this -> log -> debug('Connect task running during stop, canceling...');
+            $this -> log -> debug('Connect task running during stop, canceling');
             $this -> connectTask -> cancel() -> join();
         }
 
@@ -89,7 +89,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
     }
 
     private function connect() {
-        $this -> log -> debug('Starting connect task...');
+        $this -> log -> debug('Starting connect task');
 
         $this -> connectTask = new Task(function() {
             return $this -> connectRoutine();
@@ -108,7 +108,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
 
         while(true) {
             try {
-                $this -> log -> debug('Trying to connect to Redis server...');
+                $this -> log -> debug('Trying to connect to Redis server');
 
                 $this -> client = await($this -> factory -> createClient($this -> uri));
                 $this -> client -> once('close', async(function() {
@@ -154,7 +154,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
         if($this -> isStopping)
             return;
 
-        $this -> log -> warning('Connection to Redis lost, reconnecting...');
+        $this -> log -> warning('Connection to Redis lost, reconnecting');
         $this -> connect();
     }
 }
