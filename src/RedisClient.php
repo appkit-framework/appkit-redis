@@ -7,7 +7,6 @@ use AppKit\Health\HealthIndicatorInterface;
 use AppKit\Health\HealthCheckResult;
 use AppKit\Async\Task;
 use AppKit\Async\CanceledException;
-use function AppKit\Async\async;
 use function AppKit\Async\await;
 use function AppKit\Async\delay;
 
@@ -59,6 +58,7 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
 
     public function start() {
         $this -> connect();
+        $this -> connectTask -> await();
     }
 
     public function stop() {
@@ -89,18 +89,9 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
     }
 
     private function connect() {
-        $this -> log -> debug('Starting connect task');
-
         $this -> connectTask = new Task(function() {
             return $this -> connectRoutine();
-        });
-
-        try {
-            $this -> connectTask -> run() -> await();
-            $this -> log -> debug('Connect task completed');
-        } catch(CanceledException $e) {
-            $this -> log -> info('Connect task canceled');
-        }
+        }) -> run();
     }
 
     private function connectRoutine() {
@@ -111,9 +102,9 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
                 $this -> log -> debug('Trying to connect to Redis server');
 
                 $this -> client = await($this -> factory -> createClient($this -> uri));
-                $this -> client -> once('close', async(function() {
+                $this -> client -> once('close', function() {
                    $this -> onConnectionClose();
-                }));
+                });
 
                 $this -> log -> info('Connected to Redis server');
 
