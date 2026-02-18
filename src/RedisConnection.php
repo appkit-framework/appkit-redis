@@ -1,9 +1,8 @@
 <?php
 
-namespace AppKit\Redis\Internal;
+namespace AppKit\Redis;
 
 use AppKit\Client\AbstractClientConnection;
-use AppKit\Client\ClientConnectionException;
 use function AppKit\Async\await;
 
 use Throwable;
@@ -23,7 +22,7 @@ class RedisConnection extends AbstractClientConnection {
         try {
             return await($this -> connection -> $name(...$args));
         } catch(Throwable $e) {
-            throw new ClientConnectionException(
+            throw new RedisConnectionException(
                 $e -> getMessage(),
                 previous: $e
             );

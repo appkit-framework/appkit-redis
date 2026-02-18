@@ -2,8 +2,6 @@
 
 namespace AppKit\Redis;
 
-use AppKit\Redis\Internal\RedisConnection;
-
 use AppKit\Client\AbstractClient;
 
 use Clue\React\Redis\Factory;
