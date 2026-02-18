@@ -29,8 +29,7 @@ class RedisClient extends AbstractClient {
     }
 
     public function __call($name, $args) {
-        $this -> ensureConnected();
-        return $this -> connection -> $name(...$args);
+        return $this -> getConnection() -> $name(...$args);
     }
 
     protected function createConnection() {
