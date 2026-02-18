@@ -6,8 +6,11 @@ use AppKit\Redis\Internal\RedisConnection;
 
 use AppKit\Client\AbstractClient;
 
+use Clue\React\Redis\Factory;
+
 class RedisClient extends AbstractClient {
     private $uri;
+    private $factory;
 
     function __construct(
         $log,
@@ -23,6 +26,8 @@ class RedisClient extends AbstractClient {
             $this -> uri .= "/$database";
         if($password)
             $this -> uri .= '?password=' . rawurlencode($password);
+
+        $this -> factory = new Factory();
     }
 
     public function __call($name, $args) {
@@ -31,6 +36,6 @@ class RedisClient extends AbstractClient {
     }
 
     protected function createConnection() {
-        return new RedisConnection($this -> log, $this -> uri);
+        return new RedisConnection($this -> factory, $this -> uri);
     }
 }

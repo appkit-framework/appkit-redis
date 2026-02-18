@@ -7,19 +7,16 @@ use AppKit\Client\ClientConnectionException;
 use function AppKit\Async\await;
 
 use Throwable;
-use Clue\React\Redis\Factory;
 
 class RedisConnection extends AbstractClientConnection {
+    private $factory;
     private $uri;
 
-    private $log;
-    private $factory;
     private $connection;
 
-    function __construct($log, $uri) {
-        $this -> log = $log -> withModule(static::class);
+    function __construct($factory, $uri) {
+        $this -> factory = $factory;
         $this -> uri = $uri;
-        $this -> factory = new Factory();
     }
 
     public function __call($name, $args) {
