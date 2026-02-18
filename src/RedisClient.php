@@ -2,27 +2,12 @@
 
 namespace AppKit\Redis;
 
-use AppKit\StartStop\StartStopInterface;
-use AppKit\Health\HealthIndicatorInterface;
-use AppKit\Health\HealthCheckResult;
-use AppKit\Async\Task;
-use AppKit\Async\CanceledException;
-use function AppKit\Async\await;
-use function AppKit\Async\delay;
+use AppKit\Redis\Internal\RedisConnection;
 
-use Throwable;
-use Clue\React\Redis\Factory;
-use React\Promise\Deferred;
+use AppKit\Client\AbstractClient;
 
-class RedisClient implements StartStopInterface, HealthIndicatorInterface {
-    private $log;
+class RedisClient extends AbstractClient {
     private $uri;
-    private $factory;
-    private $isConnected = false;
-    private $isStopping = false;
-    private $connectTask;
-    private $disconnectDeferred;
-    private $client;
 
     function __construct(
         $log,
@@ -31,121 +16,21 @@ class RedisClient implements StartStopInterface, HealthIndicatorInterface {
         $password = null,
         $database = null
     ) {
-        $this -> log = $log -> withModule(static::class);
+        parent::__construct($log -> withModule(static::class));
 
         $this -> uri = "redis://$host:$port";
         if($database)
             $this -> uri .= "/$database";
         if($password)
             $this -> uri .= '?password=' . rawurlencode($password);
-
-        $this -> factory = new Factory();
     }
 
     public function __call($name, $args) {
-        if(! $this -> isConnected)
-            throw new RedisClientException('Client is not connected');
-
-        try {
-            return await($this -> client -> $name(...$args));
-        } catch(Throwable $e) {
-            throw new RedisClientException(
-                $e -> getMessage(),
-                previous: $e
-            );
-        }
+        $this -> ensureConnected();
+        return $this -> connection -> $name(...$args);
     }
 
-    public function start() {
-        $this -> connect();
-        $this -> connectTask -> await();
-    }
-
-    public function stop() {
-        $this -> isStopping = true;
-
-        if($this -> connectTask -> getStatus() == Task::RUNNING) {
-            $this -> log -> debug('Connect task running during stop, canceling');
-            $this -> connectTask -> cancel() -> join();
-        }
-
-        if($this -> isConnected) {
-            try {
-                $this -> disconnect();
-                $this -> log -> info('Disconnected from Redis server');
-            } catch(Throwable $e) {
-                $error = 'Failed to disconnect from Redis server';
-                $this -> log -> error($error, $e);
-                throw new RedisClientException(
-                    $error,
-                    previous: $e
-                );
-            }
-        }
-    }
-
-    public function checkHealth() {
-        return new HealthCheckResult($this -> isConnected);
-    }
-
-    private function connect() {
-        $this -> connectTask = new Task(function() {
-            return $this -> connectRoutine();
-        }) -> run();
-    }
-
-    private function connectRoutine() {
-        $retryAfter = null;
-
-        while(true) {
-            try {
-                $this -> log -> debug('Trying to connect to Redis server');
-
-                $this -> client = await($this -> factory -> createClient($this -> uri));
-                $this -> client -> once('close', function() {
-                   $this -> onConnectionClose();
-                });
-
-                $this -> log -> info('Connected to Redis server');
-
-                break;
-            } catch(Throwable $e) {
-                if(! $retryAfter)
-                    $retryAfter = 1;
-                else if($retryAfter == 1)
-                    $retryAfter = 5;
-                else if($retryAfter == 5)
-                    $retryAfter = 10;
-
-                $this -> log -> error(
-                    'Failed to connect to Redis server',
-                    [ 'retryAfter' => $retryAfter ],
-                    $e
-                );
-                delay($retryAfter);
-            }
-        }
-
-        $this -> isConnected = true;
-    }
-
-    private function disconnect() {
-        $this -> isConnected = false;
-        $this -> disconnectDeferred = new Deferred();
-        $this -> client -> end();
-        await($this -> disconnectDeferred -> promise());
-    }
-
-    private function onConnectionClose() {
-        $this -> isConnected = false;
-
-        if($this -> disconnectDeferred)
-            $this -> disconnectDeferred -> resolve(null);
-
-        if($this -> isStopping)
-            return;
-
-        $this -> log -> warning('Connection to Redis lost, reconnecting');
-        $this -> connect();
+    protected function createConnection() {
+        return new RedisConnection($this -> log, $this -> uri);
     }
 }

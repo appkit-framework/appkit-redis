@@ -5,11 +5,8 @@
     "license": "MIT",
     "require": {
         "appkit/async": "^1.0",
-        "appkit/health": "^1.0",
-        "appkit/start-stop": "^1.0",
-        "clue/redis-react": "^2.8",
-        "react/async": "^4.3",
-        "react/promise": "^3.3"
+        "appkit/client": "^1.0",
+        "clue/redis-react": "^2.8"
     },
     "autoload": {
         "psr-4": {
