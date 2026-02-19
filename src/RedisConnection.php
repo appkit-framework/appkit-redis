@@ -21,8 +21,14 @@ class RedisConnection extends AbstractClientConnection implements RedisInterface
     }
 
     public function __call($command, $args) {
+        return $this -> command($command, ...$args);
+    }
+
+    public function command($command, ...$args) {
         try {
             return await($this -> connection -> $command(...$args));
+            // TODO: For redis-react v3
+            // return await($this -> connection -> callAsync($command, ...$args));
         } catch(Throwable $e) {
             throw new RedisConnectionException(
                 $e -> getMessage(),
