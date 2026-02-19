@@ -6,7 +6,7 @@ use AppKit\Client\AbstractClient;
 
 use Clue\React\Redis\Factory;
 
-class RedisClient extends AbstractClient {
+class RedisClient extends AbstractClient implements RedisClientInterface {
     private $uri;
     private $factory;
 
@@ -28,8 +28,8 @@ class RedisClient extends AbstractClient {
         $this -> factory = new Factory();
     }
 
-    public function __call($name, $args) {
-        return $this -> getConnection() -> $name(...$args);
+    public function __call($command, $args) {
+        return $this -> getConnection() -> $command(...$args);
     }
 
     protected function createConnection() {

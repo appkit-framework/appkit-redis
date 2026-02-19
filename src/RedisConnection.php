@@ -2,12 +2,14 @@
 
 namespace AppKit\Redis;
 
+use AppKit\Redis\Internal\RedisInterface;
+
 use AppKit\Client\AbstractClientConnection;
 use function AppKit\Async\await;
 
 use Throwable;
 
-class RedisConnection extends AbstractClientConnection {
+class RedisConnection extends AbstractClientConnection implements RedisInterface {
     private $factory;
     private $uri;
 
@@ -18,9 +20,9 @@ class RedisConnection extends AbstractClientConnection {
         $this -> uri = $uri;
     }
 
-    public function __call($name, $args) {
+    public function __call($command, $args) {
         try {
-            return await($this -> connection -> $name(...$args));
+            return await($this -> connection -> $command(...$args));
         } catch(Throwable $e) {
             throw new RedisConnectionException(
                 $e -> getMessage(),
